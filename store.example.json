@@ -1,0 +1,48 @@
+{
+  "profile": {
+    "monthlyIncome": 5000,
+    "monthlyFixedExpense": 3000,
+    "liquidCashFloor": 5000,
+    "currentEmergencyFund": 10000,
+    "expectedAnnualReturn": 0.1,
+    "inflationRate": 0.025,
+    "currentInvestedAmount": 50000,
+    "targetDate": "2030-12-31",
+    "targetHorizonYears": 5,
+    "dcaPaused": false,
+    "plannedMonthlyDca": 1000,
+    "dcaDay": 5,
+    "firstDcaStartDate": "2026-01-05",
+    "internshipStartMonth": "2026-01"
+  },
+  "studentGoals": {
+    "travelTarget": 10000,
+    "travelCurrent": 1000,
+    "rentTarget": 20000,
+    "rentCurrent": 2000,
+    "graduationReserveTarget": 50000,
+    "graduationReserveCurrent": 5000,
+    "targetMonthlyDcaMin": 500,
+    "targetMonthlyDcaMax": 2000
+  },
+  "financials": {
+    "incomeStreams": [],
+    "savingsStorage": {
+      "liquidCash": 10000,
+      "fixedDeposits": 20000,
+      "idleFunds": 50000,
+      "cashDetail": { "cash": 1000, "alipay": 5000, "wechat": 4000 },
+      "wealthDetail": { "advancedWealth": 50000, "conservativeWealth": 20000 }
+    },
+    "debts": []
+  },
+  "trackedFunds": [
+    { "code": "018846", "name": "示例纯债基金", "benchmarkIndex": "BOND_INDEX", "category": "纯债防守底座", "targetShare": 0.2, "units": 0, "avgCost": 1.0, "currentNav": 1.0, "baseMonthlyDca": 200 },
+    { "code": "110020", "name": "示例沪深300联接", "benchmarkIndex": "000300", "category": "A股核心大盘", "targetShare": 0.25, "units": 0, "avgCost": 1.0, "currentNav": 1.0, "baseMonthlyDca": 250 },
+    { "code": "001052", "name": "示例中证500联接", "benchmarkIndex": "000905", "category": "A股成长中盘", "targetShare": 0.15, "units": 0, "avgCost": 1.0, "currentNav": 1.0, "baseMonthlyDca": 150 },
+    { "code": "012733", "name": "示例AI主题联接", "benchmarkIndex": "AI_INDEX", "category": "AI/科技龙头", "targetShare": 0.1, "units": 0, "avgCost": 1.0, "currentNav": 1.0, "baseMonthlyDca": 100 },
+    { "code": "008887", "name": "示例半导体芯片联接", "benchmarkIndex": "CHIP_INDEX", "category": "半导体芯片", "targetShare": 0.15, "units": 0, "avgCost": 1.0, "currentNav": 1.0, "baseMonthlyDca": 150 },
+    { "code": "100032", "name": "示例红利指数增强", "benchmarkIndex": "DIVIDEND", "category": "红利价值·对冲", "targetShare": 0.15, "units": 0, "avgCost": 1.0, "currentNav": 1.0, "baseMonthlyDca": 150 }
+  ],
+  "records": []
+}

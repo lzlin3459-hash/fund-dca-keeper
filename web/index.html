@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>知衡 · 资金分配与定投系统</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 顶栏 Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <i class="fa-solid fa-compass-drafting"></i>
+        </div>
+        <div class="brand-text">
+          <h1>知衡 · 资金分配与定投系统</h1>
+          <p class="subtitle">动态资金分配 · 8000元负债清偿 · 年末旅游与毕业储备 · 每月500元定投</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-primary" id="btnOpenIncomeModal">
+          <i class="fa-solid fa-plus-circle"></i> 登记兼职/收入入账
+        </button>
+        <button class="btn btn-outline" id="btnOpenGoalsModal">
+          <i class="fa-solid fa-bullseye"></i> 调整四大专项目标
+        </button>
+      </div>
+    </header>
+
+    <!-- 🌟 顶部全屏高亮区：5只主力持仓基金估值温度计与智能定投信号看板 -->
+    <section class="valuation-board-section glass glow-gold mb-4">
+      <div class="column-header">
+        <div class="col-title" style="font-size:1.1rem;">
+          <i class="fa-solid fa-fire-flame-curved text-gold"></i> 6只核心持仓基金全景估值温度与定投信号看板
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="badge badge-success" id="dcaStatusBadge">📅 每月定投 ¥500/月（按真实估值自动调整）</span>
+          <button class="btn btn-outline btn-sm" id="btnManageFundsTop">
+            <i class="fa-solid fa-pen-to-square"></i> 管理持仓
+          </button>
+        </div>
+
+
+
+
+      </div>
+
+      <!-- 5只基金估值卡片网格 -->
+      <div class="fund-cards-grid" id="topFundCardsGrid">
+        <!-- JS 动态渲染 5 只基金估值卡片 -->
+      </div>
+    </section>
+
+
+    <!-- 极简 Style A 核心双卡片布局 -->
+    <main class="main-two-cards">
+
+      <!-- 👈 左侧卡片：兼职动态入账与四水池划转指令站 -->
+      <section class="card-column glass glow-green">
+        <div class="column-header">
+          <div class="col-title">
+            <i class="fa-solid fa-paper-plane"></i> 兼职动态入账与四水池划转指令站
+          </div>
+          <span class="badge badge-success" id="incomeStatusBadge">随到账·随重算</span>
+        </div>
+
+        <!-- 收入与流动性 Banner -->
+        <div class="income-summary-banner">
+          <div class="banner-main">
+            <span class="lbl">大四总资产盘点 (现金零钱 + 理财)</span>
+            <strong class="val" id="dispTotalAssets">¥4,700</strong>
+          </div>
+          <div class="banner-sub">
+            <span>零钱 ¥900 | 稳健理财 ¥600 | 进阶理财 ¥3,200</span>
+            <span>待还债务: <strong id="dispTotalDebt" class="text-amber">¥8,000</strong> (净位: <strong id="dispNetWorth">¥-3,300</strong>)</span>
+          </div>
+        </div>
+
+
+
+        <!-- 划转步骤流程 -->
+        <div class="directives-wrapper">
+          <h3 class="step-group-title"><i class="fa-solid fa-route"></i> 当月资金最合理划转顺序</h3>
+
+          <!-- Step 1 -->
+          <div class="directive-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="name">日常开销与活期流动防守线</span>
+                <strong class="amt" id="dirLiquidFloor">保留 ¥2,000</strong>
+              </div>
+              <p class="desc">保障本月校园用餐与突发应急，防守线绝不侵占。</p>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="directive-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="name">8000元负债分期清偿包</span>
+                <strong class="amt text-amber" id="dirDebtPayment">划款 ¥500</strong>
+              </div>
+              <p class="desc">按月稳步还本金，兼职有大额入账时优先结清。</p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="directive-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="name">年末旅游与毕业求职准备金</span>
+                <strong class="amt" id="dirGoalsAlloc">划款 ¥300</strong>
+              </div>
+              <p class="desc">自动按比例灌入“年末旅游1万”与“毕业租房+过渡7千”专项池。</p>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="directive-step active-step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="name">小额指数定投流 (每月500元)</span>
+                <strong class="amt text-gold" id="dirDcaAlloc">划款 ¥500</strong>
+              </div>
+              <p class="desc">零花钱建仓低估宽基，提前开启大学生的复利跑道：</p>
+
+              <!-- 基金细分划转清单 -->
+              <div class="fund-dca-list" id="fundDcaList">
+                <!-- JS 动态渲染 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 收入明细流水表 -->
+        <div class="income-list-section">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 style="font-size:0.85rem; color:#cbd5e1;"><i class="fa-solid fa-receipt"></i> 本月收入流水 (生活费/兼职)</h4>
+            <button class="btn btn-outline btn-sm" id="btnQuickAddIncome">+ 记一笔收入</button>
+          </div>
+          <div class="income-items-container" id="incomeItemsContainer">
+            <!-- JS 动态渲染 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 👉 右侧卡片：专项目标进度与大四理财专家简报 -->
+      <section class="card-column glass glow-blue">
+        <div class="column-header">
+          <div class="col-title">
+            <i class="fa-solid fa-clipboard-check"></i> 专项目标进度与理财专家简报
+          </div>
+          <span class="badge badge-info" id="reportDateBadge">今日最新</span>
+        </div>
+
+        <!-- 三大目标进度条看台 -->
+        <div class="goals-progress-box">
+          <h3 class="step-group-title mb-2"><i class="fa-solid fa-flag-checkered"></i> 三大专项攒钱目标</h3>
+
+          <!-- 目标 1: 年末旅游金 -->
+          <div class="goal-item">
+            <div class="goal-label">
+              <span>✈️ 年末旅游资金 (目标 ¥10,000)</span>
+              <strong id="travelProgText">¥1,500 (15.0%)</strong>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar bg-gold" id="barTravel" style="width: 15%;"></div>
+            </div>
+          </div>
+
+          <!-- 目标 2: 毕业租房备用金 -->
+          <div class="goal-item">
+            <div class="goal-label">
+              <span>🏠 毕业租房准备金 (目标 ¥2,000)</span>
+              <strong id="rentProgText">¥500 (25.0%)</strong>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar bg-blue" id="barRent" style="width: 25%;"></div>
+            </div>
+          </div>
+
+          <!-- 目标 3: 毕业留存备用金 -->
+          <div class="goal-item">
+            <div class="goal-label">
+              <span>🎓 毕业留存备用金 (目标 ¥5,000)</span>
+              <strong id="gradProgText">¥1,000 (20.0%)</strong>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar bg-green" id="barGrad" style="width: 20%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 专家简报四章节 -->
+        <div class="report-content-body">
+          <!-- 章节 0: 零钱盘点 -->
+          <div class="report-chapter">
+            <h3><i class="fa-solid fa-wallet"></i> 💰 零钱盘点与活期防守线诊断</h3>
+            <div class="chapter-p highlight-p" id="repCashAdvice">
+              【手头现金盘点】当前流动资金共计 ¥900（现金 ¥300 + 支付宝 ¥500 + 微信 ¥100）。距 ¥2,000 的日常防守底线尚差 ¥1,100，建议将下笔兼职到账收益优先补充至活期。
+            </div>
+          </div>
+
+          <!-- 章节 1: 债务清偿 -->
+          <div class="report-chapter">
+            <h3><i class="fa-solid fa-credit-card"></i> 💳 8,000元负债清偿与现金流指导</h3>
+            <div class="chapter-p" id="repDebtAdvice">
+              检测到当前待还负债约 ¥8,000。建议保持每月 ¥500~¥800 稳定还本金；当兼职获较大笔收入时，优先提拨 40% 提前结清，争取毕业前清零负债！
+            </div>
+          </div>
+
+          <!-- 章节 2: 旅游与毕业目标 -->
+          <div class="report-chapter">
+            <h3><i class="fa-solid fa-plane-departure"></i> 🎯 年末旅游与毕业求职金积累指南</h3>
+            <div class="chapter-p" id="repGoalAdvice">
+              年末旅游金完成 15%，毕业租房完成 25%。每当兼职入账时，系统已为您自动锁定比例灌入目标池，不影响正常生活开销。
+            </div>
+          </div>
+
+          <!-- 章节 3: 小额定投与复利 -->
+          <div class="report-chapter">
+            <h3><i class="fa-solid fa-chart-line"></i> 📈 500元智能定投分摊理由</h3>
+            <div class="chapter-p" id="repDcaAdvice">
+              沪深300指数处于历史底部 27.6% 黄金低洼区。用零花钱进行小额定投，既无财务压力，又能建立终身受用的财富复利思维！
+            </div>
+          </div>
+
+          <!-- 章节 4: DeepSeek-V4-Pro 大模型宏观研判 -->
+          <div class="report-chapter" style="margin-top:0.75rem;">
+            <h3><i class="fa-solid fa-brain text-gold"></i> 🤖 DeepSeek-V4-Pro 深度宏观研判与调仓指引</h3>
+            <div class="chapter-p highlight-p" id="repDeepSeekAdvice" style="white-space: pre-wrap; font-size:0.8rem; line-height:1.6; border-left:3px solid #f59e0b; background:rgba(245,158,11,0.05);">
+              正在调取 DeepSeek-V4-Pro 大模型推理引擎...
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 登记收入 Modal -->
+  <div class="modal-overlay" id="incomeModal">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-hand-holding-dollar"></i> 登记兼职 / 生活费入账</h3>
+        <button class="modal-close" id="btnCloseIncomeModal">&times;</button>
+      </div>
+      <form id="incomeForm">
+        <div class="form-group">
+          <label>收入项目</label>
+          <input type="text" id="incName" placeholder="例如：兼职家教 / 设计报酬 / 月度生活费" required>
+        </div>
+        <div class="form-group">
+          <label>入账金额 (¥)</label>
+          <input type="number" id="incAmount" placeholder="800" required>
+        </div>
+        <div class="form-group">
+          <label>入账日期</label>
+          <input type="date" id="incDate" required>
+        </div>
+        <div class="form-group">
+          <label>收入类型</label>
+          <select id="incType" class="form-select">
+            <option value="SIDE_HUSTLE">兼职 / 实习报酬</option>
+            <option value="STIPEND">家庭生活费</option>
+            <option value="BONUS">奖学金 / 奖金</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btnCancelIncomeModal">取消</button>
+          <button type="submit" class="btn btn-primary">登记并实时重算划转方案</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 调整四大专项目标 Modal -->
+  <div class="modal-overlay" id="goalsModal">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-bullseye"></i> 调整大四专项目标进度</h3>
+        <button class="modal-close" id="btnCloseGoalsModal">&times;</button>
+      </div>
+      <form id="goalsForm">
+        <div class="form-group">
+          <label>年末旅游金目标 (¥)</label>
+          <input type="number" id="goalTravelTarget" placeholder="10000" required>
+        </div>
+        <div class="form-group">
+          <label>年末旅游金已存金额 (¥)</label>
+          <input type="number" id="goalTravelCurrent" placeholder="1500" required>
+        </div>
+        <div class="form-group">
+          <label>毕业租房准备金目标 (¥)</label>
+          <input type="number" id="goalRentTarget" placeholder="2000" required>
+        </div>
+        <div class="form-group">
+          <label>毕业租房已存金额 (¥)</label>
+          <input type="number" id="goalRentCurrent" placeholder="500" required>
+        </div>
+        <div class="form-group">
+          <label>毕业留存备用金目标 (¥)</label>
+          <input type="number" id="goalGradTarget" placeholder="5000" required>
+        </div>
+        <div class="form-group">
+          <label>毕业留存已存金额 (¥)</label>
+          <input type="number" id="goalGradCurrent" placeholder="1000" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btnCancelGoalsModal">取消</button>
+          <button type="submit" class="btn btn-primary">保存进度</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理持仓 / 调整定投金额 Modal -->
+  <div class="modal-overlay" id="fundModal">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-to-square"></i> 管理持仓 · 调整每月定投基数</h3>
+        <button class="modal-close" id="btnCloseFundModal">&times;</button>
+      </div>
+      <p style="font-size:.8rem; color:#94a3b8; margin-bottom:.8rem;">
+        调整每只基金的每月定投基数（元）。保存后系统会按最新估值自动重新计算每只的实际扣款金额。
+      </p>
+      <div id="fundModalList" style="max-height:340px; overflow-y:auto;"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnCancelFundModal">取消</button>
+        <button type="button" class="btn btn-primary" id="btnSaveFunds">保存并重新计算</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

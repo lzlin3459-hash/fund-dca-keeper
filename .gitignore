@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 虚拟环境（勿上传）
+.venv/
+venv/
+
+# 个人账本数据（含真实财务，勿上传）
+store.json
+.env
+
+# 日志/临时
+*.log
+_*.txt
+_*.json
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 旧版Node项目的依赖（勿上传）
+知衡原始Node项目/node_modules/
