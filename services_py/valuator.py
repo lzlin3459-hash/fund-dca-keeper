@@ -69,20 +69,22 @@ def get_ai_pe() -> dict:
 
 def get_semi_pe() -> dict:
     """半导体：巨潮电子行业当前 PE（加权），按成长股区间映射。日期动态取当天。"""
-    try:
-        from datetime import timedelta
-        # 巨潮按交易日披露，周末/节假日无数据，从今天往回找最近7天
-        for back in range(0, 8):
-            d = (_date.today() - timedelta(days=back)).strftime("%Y%m%d")
+    from datetime import timedelta
+    # 巨潮按交易日披露，周末/节假日无数据，从今天往回找最近7天
+    for back in range(0, 8):
+        d = (_date.today() - timedelta(days=back)).strftime("%Y%m%d")
+        try:
             df = ak.stock_industry_pe_ratio_cninfo(symbol="证监会行业分类", date=d)
+            if df is None or len(df) == 0:
+                continue  # 该日无数据（周末/节假日），往回找
             row = df[df["行业名称"].str.contains("计算机、通信和其他电子设备", na=False)]
             if len(row) > 0:
                 pe = float(row["静态市盈率-加权平均"].iloc[0])
                 return {"pe": round(pe, 2), "score": pe, "mode": "当前PE(电子行业)"}
-        return {"pe": 75.6, "score": 75.6, "mode": "默认", "fallback": True}
-    except Exception as e:
-        print(f"[valuator] 半导体失败：{e}")
-        return {"pe": 75.6, "score": 75.6, "mode": "默认", "fallback": True}
+        except Exception:
+            continue  # 该日接口报错，往回找
+    print("[valuator] 半导体近7天均无数据，用默认")
+    return {"pe": 75.6, "score": 75.6, "mode": "默认", "fallback": True}
 
 
 def get_index_valuations() -> list:
