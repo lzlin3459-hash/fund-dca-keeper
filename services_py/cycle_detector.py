@@ -17,37 +17,51 @@ _cache = {}
 
 
 def _latest_cpi_yoy() -> float:
-    """最新CPI同比（%）"""
-    df = ak.macro_china_cpi()
-    return float(df.iloc[0]["全国-同比增长"])
+    """最新CPI同比（%），失败返回None"""
+    try:
+        df = ak.macro_china_cpi()
+        if df is None or len(df) == 0:
+            return None
+        return float(df.iloc[0]["全国-同比增长"])
+    except Exception:
+        return None
 
 
 def _latest_ppi_yoy() -> float:
-    """最新PPI同比（%）"""
-    df = ak.macro_china_ppi()
-    return float(df.iloc[0]["当月同比增长"])
-
-
-def _latest_gdp_yoy() -> float:
-    """最新GDP同比（%）"""
-    df = ak.macro_china_gdp()
-    return float(df.iloc[0]["国内生产总值-同比增长"])
+    """最新PPI同比（%），失败返回None"""
+    try:
+        df = ak.macro_china_ppi()
+        if df is None or len(df) == 0:
+            return None
+        return float(df.iloc[0]["当月同比增长"])
+    except Exception:
+        return None
 
 
 def _gdp_trend() -> str:
-    """GDP增速方向：up/down（对比最近两期）"""
-    df = ak.macro_china_gdp()
-    cur = float(df.iloc[0]["国内生产总值-同比增长"])
-    prev = float(df.iloc[1]["国内生产总值-同比增长"])
-    return "up" if cur >= prev else "down"
+    """GDP增速方向：up/down（对比最近两期），失败返回up"""
+    try:
+        df = ak.macro_china_gdp()
+        if df is None or len(df) < 2:
+            return "up"
+        cur = float(df.iloc[0]["国内生产总值-同比增长"])
+        prev = float(df.iloc[1]["国内生产总值-同比增长"])
+        return "up" if cur >= prev else "down"
+    except Exception:
+        return "up"
 
 
 def _cpi_trend() -> str:
-    """CPI方向：up/down（最近两期）"""
-    df = ak.macro_china_cpi()
-    cur = float(df.iloc[0]["全国-同比增长"])
-    prev = float(df.iloc[1]["全国-同比增长"])
-    return "up" if cur >= prev else "down"
+    """CPI方向：up/down（最近两期），失败返回up"""
+    try:
+        df = ak.macro_china_cpi()
+        if df is None or len(df) < 2:
+            return "up"
+        cur = float(df.iloc[0]["全国-同比增长"])
+        prev = float(df.iloc[1]["全国-同比增长"])
+        return "up" if cur >= prev else "down"
+    except Exception:
+        return "up"
 
 
 def get_merrill_clock_phase() -> dict:
@@ -96,41 +110,52 @@ def get_cycle_adjustment(fund_category: str) -> dict:
     """
     按基金类型返回周期调节系数
     fund_category: 宽基/红利/科技/纯债
+    任何环节失败都返回中性1.0x，不影响定投主流程
     """
-    if "cycle" in _cache:
-        merrill, kitchin, juglar = _cache["cycle"]
-    else:
-        merrill = get_merrill_clock_phase()
-        kitchin = get_kitchin_phase()
-        juglar = get_juglar_adjustment()
-        _cache["cycle"] = (merrill, kitchin, juglar)
+    try:
+        if "cycle" in _cache:
+            merrill, kitchin, juglar = _cache["cycle"]
+        else:
+            merrill = get_merrill_clock_phase()
+            kitchin = get_kitchin_phase()
+            juglar = get_juglar_adjustment()
+            _cache["cycle"] = (merrill, kitchin, juglar)
 
-    # 基础系数：按基金类型
-    if "宽基" in fund_category or "大盘" in fund_category or "中盘" in fund_category:
-        base = merrill["stock_mult"]
-    elif "红利" in fund_category:
-        # 滞胀期红利防御价值上升
-        base = 1.1 if merrill["phase"] == "滞胀" else merrill["stock_mult"]
-    elif "科技" in fund_category or "AI" in fund_category or "半导体" in fund_category or "芯片" in fund_category:
-        base = juglar["tech_mult"]
-    elif "纯债" in fund_category or "债" in fund_category:
-        base = merrill["bond_mult"]
-    else:
-        base = 1.0
+        # 基础系数：按基金类型
+        if "宽基" in fund_category or "大盘" in fund_category or "中盘" in fund_category:
+            base = merrill["stock_mult"]
+        elif "红利" in fund_category:
+            # 滞胀期红利防御价值上升
+            base = 1.1 if merrill["phase"] == "滞胀" else merrill["stock_mult"]
+        elif "科技" in fund_category or "AI" in fund_category or "半导体" in fund_category or "芯片" in fund_category:
+            base = juglar["tech_mult"]
+        elif "纯债" in fund_category or "债" in fund_category:
+            base = merrill["bond_mult"]
+        else:
+            base = 1.0
 
-    # 基钦微调（±0.05）
-    if "债" not in fund_category:
-        base = round(base * kitchin["mult"], 3)
+        # 基钦微调（±0.05），纯债不调
+        if "债" not in fund_category:
+            base = round(base * kitchin["mult"], 3)
 
-    return {
-        "merrill": merrill["phase"],
-        "merrill_text": merrill["text"],
-        "kitchin": kitchin["phase"],
-        "kitchin_text": kitchin["text"],
-        "juglar": juglar["phase"],
-        "juglar_text": juglar["text"],
-        "cycle_mult": base,
-    }
+        return {
+            "merrill": merrill["phase"],
+            "merrill_text": merrill["text"],
+            "kitchin": kitchin["phase"],
+            "kitchin_text": kitchin["text"],
+            "juglar": juglar["phase"],
+            "juglar_text": juglar["text"],
+            "cycle_mult": base,
+        }
+    except Exception as e:
+        # 周期判断失败，返回中性系数，不影响定投主流程
+        print(f"[cycle] 周期判断失败，用中性1.0x: {e}")
+        return {
+            "merrill": "未知", "merrill_text": "周期数据获取失败",
+            "kitchin": "未知", "kitchin_text": "周期数据获取失败",
+            "juglar": "未知", "juglar_text": "周期数据获取失败",
+            "cycle_mult": 1.0,
+        }
 
 
 if __name__ == "__main__":
