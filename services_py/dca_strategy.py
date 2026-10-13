@@ -1,8 +1,9 @@
 """
 dca_strategy.py — 巴菲特价值投资定投引擎（从知衡 JS 翻译）
-安全边际乘数 × 逆向贪婪乘数，按权重分配月度定投预算
+安全边际乘数 × 逆向贪婪乘数 × 经济周期乘数，按权重分配月度定投预算
 """
 from __future__ import annotations
+from services_py.cycle_detector import get_cycle_adjustment
 
 
 def pe_multiplier(pe_pct: float) -> tuple[float, str, str]:
@@ -29,6 +30,18 @@ def nav_multiplier(month_change: float) -> float:
         return 0.9
 
 
+def _cycle_category(fund: dict) -> str:
+    """根据基金category映射到周期类型"""
+    cat = fund.get("category", "")
+    if "债" in cat:
+        return "纯债"
+    if "红利" in cat:
+        return "红利"
+    if "AI" in cat or "半导体" in cat or "芯片" in cat or "科技" in cat:
+        return "科技"
+    return "宽基"
+
+
 def analyze_portfolio(funds: list, indices: list, monthly_budget: float = 500) -> dict:
     """
     funds: [{code,name,benchmarkIndex,targetShare,units,avgCost,baseMonthlyDca,currentNav}]
@@ -53,8 +66,11 @@ def analyze_portfolio(funds: list, indices: list, monthly_budget: float = 500) -
 
         pm, action, badge = pe_multiplier(pe_pct)
         nm = nav_multiplier(mchg)
+        # 经济周期乘数（按基金类型自动判断）
+        cyc_adj = get_cycle_adjustment(_cycle_category(f))
+        cyc_m = cyc_adj["cycle_mult"]
         base = f.get("baseMonthlyDca", 100)
-        score = base * pm * nm
+        score = base * pm * nm * cyc_m
         total_score += score
 
         processed.append({
@@ -64,6 +80,8 @@ def analyze_portfolio(funds: list, indices: list, monthly_budget: float = 500) -
             "profitRate": f"{(mv-cost)/cost*100:.2f}%" if cost > 0 else "0.00%",
             "pePercentile": pe_pct, "monthlyChange": mchg,
             "peMultiplier": pm, "navMultiplier": round(nm, 2),
+            "cycleMultiplier": cyc_m,
+            "cyclePhase": f"{cyc_adj['merrill']}/{cyc_adj['kitchin']}/{cyc_adj['juglar']}",
             "baseDca": round(base),
             "combinedScore": score, "strategyAction": action, "actionBadgeClass": badge,
             "plannedDcaAmount": 0
