@@ -15,6 +15,7 @@ async function fetchGlobalData() {
     renderTopFundValuationBoard(portfolioFunds, data.indices);
     renderAllocationColumn(data.studentAllocation);
     renderStudentReportColumn(data.studentReport, data.studentGoals);
+    renderDisciplineStrip(data.discipline, data.cashBullet);
 
     // 顶部预算 badge 动态化
     const budget = data.profile && data.profile.plannedMonthlyDca;
@@ -96,6 +97,28 @@ function renderTopFundValuationBoard(portfolioFunds = [], indices = []) {
           <span style="font-size:0.78rem; color:#94a3b8;">定投调整</span>
           <span style="font-size:0.78rem; font-weight:700; color:${mult < 1 ? '#fbbf24' : '#34d399'};">
             原 ¥${Number(fund.baseDca || 0)} → 现 ¥${Number(dcaAmt)} ${mult < 1 ? `（少投 ¥${Number(fund.baseDca || 0) - Number(dcaAmt)}）` : `（多投 ¥${Number(dcaAmt) - Number(fund.baseDca || 0)}）`}
+          </span>
+        </div>` : ''}
+        ${fund.cycleMultiplier !== undefined && Math.abs(fund.cycleMultiplier - 1.0) > 0.01 ? `
+        <div class="fund-card-meta" style="margin-top:0.2rem;">
+          <span style="font-size:0.75rem; color:#94a3b8;">周期调节</span>
+          <span style="font-size:0.75rem; font-weight:600; color:#a78bfa;">
+            ${fund.cycleMultiplier < 1 ? '周期收敛' : '周期加码'} ×${fund.cycleMultiplier}
+            ${fund.cyclePhase ? `（${fund.cyclePhase}）` : ''}
+          </span>
+        </div>` : ''}
+        ${fund.vixMultiplier !== undefined && Math.abs(fund.vixMultiplier - 1.0) > 0.01 ? `
+        <div class="fund-card-meta" style="margin-top:0.2rem;">
+          <span style="font-size:0.75rem; color:#94a3b8;">情绪调节</span>
+          <span style="font-size:0.75rem; font-weight:600; color:#f472b6;">
+            ${fund.vixMultiplier < 1 ? '情绪收敛' : '逆向加码'} ×${fund.vixMultiplier}
+            ${fund.vixPhase ? `（${fund.vixPhase}）` : ''}
+          </span>
+        </div>` : ''}
+        ${fund.timeStopFlag ? `
+        <div class="fund-card-meta" style="margin-top:0.2rem; padding:0.25rem 0.4rem; border:1px solid rgba(248,113,113,0.4); border-radius:6px; background:rgba(248,113,113,0.06);">
+          <span style="font-size:0.75rem; color:#f87171; font-weight:700;">
+            ⚠️ 时间止损检查：已定投 ${fund.monthsHeld} 个月仍未回本（成本回撤 ${fund.costDrawdownPct}%），请评估是否暂停/减投
           </span>
         </div>` : ''}
       </div>
@@ -347,4 +370,46 @@ function bindEvents() {
       fetchGlobalData();
     }
   });
+}
+
+
+// 🛡️ 渲染范蠡纪律自检 + 现金子弹看板
+function renderDisciplineStrip(discipline, cashBullet) {
+  if (!discipline) return;
+
+  // 1. 单基金试错红线 ≤10%
+  const limEl = document.getElementById('discSingleLimitBody');
+  if (limEl) {
+    const ok = discipline.singleLimitOk;
+    limEl.innerHTML = ok
+      ? `<span style="color:#34d399; font-weight:700;">✅ 合规 · 最大单基金 ¥${discipline.maxFundDca} / 总资产 ¥${discipline.totalAssets}（${discipline.singleLimitPct}% ≤ 10%）</span>`
+      : `<span style="color:#f87171; font-weight:700;">⚠️ 超限 · 最大单基金 ¥${discipline.maxFundDca} 已占 ${discipline.singleLimitPct}%，超过10%红线</span>`;
+  }
+
+  // 2. 杠杆纪律
+  const levEl = document.getElementById('discLeverageBody');
+  if (levEl) {
+    levEl.innerHTML = discipline.leverageOk
+      ? `<span style="color:#34d399; font-weight:700;">✅ 零杠杆 · 未借入资金投资，符合"严禁加杠杆"红线</span>`
+      : `<span style="color:#fbbf24; font-weight:700;">⚠️ 存在负债 ¥${discipline.totalDebt || 0}，投资前先保证债务清偿优先</span>`;
+  }
+
+  // 3. 时间止损 (18个月)
+  const tsEl = document.getElementById('discTimeStopBody');
+  if (tsEl) {
+    if (discipline.timeStopFunds && discipline.timeStopFunds.length > 0) {
+      const names = discipline.timeStopFunds.map(t => `${t.name}（持仓${t.monthsHeld}个月/-${t.costDrawdownPct}%）`).join('、');
+      tsEl.innerHTML = `<span style="color:#f87171; font-weight:700;">⚠️ ${discipline.timeStopCount} 只触发检查：${names}</span>`;
+    } else {
+      tsEl.innerHTML = `<span style="color:#34d399; font-weight:700;">✅ 全部基金未触发 · 持仓未满18个月或已回本</span>`;
+    }
+  }
+
+  // 4. 现金子弹储备
+  const bulEl = document.getElementById('discBulletBody');
+  if (bulEl && cashBullet) {
+    bulEl.innerHTML = `<span style="color:#fbbf24; font-weight:700;">
+      💰 现金 ¥${cashBullet.liquidCash} · 恐慌模式月需约 ¥${cashBullet.panicMonthlyNeed} → 可支撑 <b>${cashBullet.bulletMonths} 个月</b>逆向加码
+    </span>`;
+  }
 }

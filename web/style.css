@@ -139,6 +139,40 @@ body {
   .fund-cards-grid { grid-template-columns: 1fr; }
 }
 
+/* 🛡️ 范蠡纪律自检 + 现金子弹看板 */
+.discipline-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+@media (max-width: 900px) {
+  .discipline-strip { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .discipline-strip { grid-template-columns: 1fr; }
+}
+.disc-card {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+}
+.disc-title {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.disc-title i { color: var(--accent, #7c3aed); }
+.disc-body {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
 .fund-card-item {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border-card);

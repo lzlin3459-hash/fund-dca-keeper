@@ -40,18 +40,75 @@ def build_full_data():
     indices = valuator.get_index_valuations()
 
     # 2) 真实基金净值，更新 currentNav
+    today = date.today()
+    first_dca = profile.get("firstDcaStartDate")
+    months_held = 0.0
+    if first_dca:
+        try:
+            fd = date.fromisoformat(str(first_dca)[:10])
+            months_held = round((today - fd).days / 30.44, 1)
+        except Exception:
+            months_held = 0.0
+
     real_funds = []
     for f in funds:
         nav_info = fund_nav.get_fund_nav(f["code"])
         f["currentNav"] = nav_info["nav"]
         f["realNav"] = nav_info["real"]
         f["dailyPct"] = nav_info["daily_pct"]
+        # ---- 时间止损（成本口径，范蠡：回本周期>18个月止损）----
+        # 用用户实际持仓时长 + 成本回撤判断，而非基金历史净值高点
+        avg_cost = float(f.get("avgCost", 1.0) or 1.0)
+        cost_drawdown = round((avg_cost - nav_info["nav"]) / avg_cost * 100, 1) if avg_cost > 0 else 0.0
+        f["monthsHeld"] = months_held
+        f["costDrawdownPct"] = cost_drawdown
+        f["timeStopFlag"] = bool(months_held >= 18 and nav_info["nav"] < avg_cost)
+        # 净值自身高点（参考展示，不参与止损判断）
+        f["monthsSinceHigh"] = nav_info.get("monthsSinceHigh", 0)
         # 基金月涨跌注入对应指数的 monthlyChange
         real_funds.append(f)
 
     # 3) 巴菲特定投分配
     budget = profile.get("plannedMonthlyDca", goals.get("targetMonthlyDcaMin", 500))
     fund_portfolio = analyze_portfolio(real_funds, indices, budget)
+
+    # 3.5) 范蠡纪律自检 + 现金子弹仪表盘
+    ss = financials.get("savingsStorage", {})
+    cash = float(ss.get("liquidCash", 0) or 0)
+    wealth = ss.get("wealthDetail", {})
+    advanced = float(wealth.get("advancedWealth", 0) or 0)
+    conservative = float(wealth.get("conservativeWealth", 0) or 0)
+    total_assets = cash + advanced + conservative
+    total_debt = sum(float(d.get("remainingPrincipal", 0) or 0) for d in financials.get("debts", []))
+    # 纪律红线1：单基金月投 ≤ 总资产10%
+    max_fund_dca = max((f.get("plannedDcaAmount", 0) for f in fund_portfolio["funds"]), default=0)
+    single_limit_ok = total_assets > 0 and max_fund_dca <= total_assets * 0.10
+    # 纪律红线2：不加杠杆（有负债≠杠杆，但提示负债健康度）
+    leverage_ok = total_debt == 0
+    # 纪律红线3：时间止损检查（持仓18个月仍未回本）
+    time_stop_funds = [{"code": f["code"], "name": f["name"],
+                        "monthsHeld": f.get("monthsHeld", 0),
+                        "costDrawdownPct": f.get("costDrawdownPct", 0)}
+                       for f in real_funds if f.get("timeStopFlag")]
+    # 现金子弹：全市场恐慌（权益全部1.2x）时月度所需 vs 现金储备可支撑月数
+    panic_monthly_need = round(budget * 1.15, 0)  # 纯债不调，权益加权≈1.15-1.2
+    bullet_months = round(cash / panic_monthly_need, 1) if panic_monthly_need > 0 else 0
+    discipline = {
+        "totalAssets": round(total_assets),
+        "totalDebt": round(total_debt),
+        "maxFundDca": max_fund_dca,
+        "singleLimitPct": round(max_fund_dca / total_assets * 100, 1) if total_assets > 0 else 0,
+        "singleLimitOk": single_limit_ok,
+        "leverageOk": leverage_ok,
+        "timeStopFunds": time_stop_funds,
+        "timeStopCount": len(time_stop_funds),
+    }
+    cash_bullet = {
+        "liquidCash": round(cash),
+        "monthlyBudget": round(budget),
+        "panicMonthlyNeed": panic_monthly_need,
+        "bulletMonths": bullet_months,
+    }
 
     # 4) 四水池分配
     student_alloc = allocate(profile, financials, goals, real_funds, indices)
@@ -85,7 +142,8 @@ def build_full_data():
         "profile": profile, "studentGoals": goals, "financials": financials,
         "trackedFunds": real_funds, "indices": indices,
         "fundPortfolio": fund_portfolio, "studentAllocation": student_alloc,
-        "studentReport": student_report
+        "studentReport": student_report,
+        "discipline": discipline, "cashBullet": cash_bullet
     }
 
 
