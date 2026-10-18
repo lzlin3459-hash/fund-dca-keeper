@@ -11,9 +11,11 @@ cycle_detector.py — 经济周期自动判断（美林时钟 + 基钦库存周�
 """
 from __future__ import annotations
 import akshare as ak
+import time
 from datetime import date as _date
 
 _cache = {}
+_CACHE_TTL = 24 * 3600  # 24小时过期，刷新页面时自动更新宏观数据
 
 
 def _latest_cpi_yoy() -> float:
@@ -113,13 +115,16 @@ def get_cycle_adjustment(fund_category: str) -> dict:
     任何环节失败都返回中性1.0x，不影响定投主流程
     """
     try:
-        if "cycle" in _cache:
+        now_ts = time.time()
+        # 缓存24小时过期
+        if "cycle" in _cache and (now_ts - _cache.get("ts", 0)) < _CACHE_TTL:
             merrill, kitchin, juglar = _cache["cycle"]
         else:
             merrill = get_merrill_clock_phase()
             kitchin = get_kitchin_phase()
             juglar = get_juglar_adjustment()
             _cache["cycle"] = (merrill, kitchin, juglar)
+            _cache["ts"] = now_ts
 
         # 基础系数：按基金类型
         if "宽基" in fund_category or "大盘" in fund_category or "中盘" in fund_category:

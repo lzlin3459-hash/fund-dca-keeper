@@ -1,9 +1,10 @@
 """
 dca_strategy.py — 巴菲特价值投资定投引擎（从知衡 JS 翻译）
-安全边际乘数 × 逆向贪婪乘数 × 经济周期乘数，按权重分配月度定投预算
+安全边际乘数 × 逆向贪婪乘数 × 经济周期乘数 × VIX情绪乘数，按权重分配月度定投预算
 """
 from __future__ import annotations
 from services_py.cycle_detector import get_cycle_adjustment
+from services_py.vix_sentiment import get_vix_sentiment
 
 
 def pe_multiplier(pe_pct: float) -> tuple[float, str, str]:
@@ -69,8 +70,11 @@ def analyze_portfolio(funds: list, indices: list, monthly_budget: float = 500) -
         # 经济周期乘数（按基金类型自动判断）
         cyc_adj = get_cycle_adjustment(_cycle_category(f))
         cyc_m = cyc_adj["cycle_mult"]
+        # VIX/VXN情绪乘数（逆向加仓）
+        vix_adj = get_vix_sentiment(_cycle_category(f))
+        vix_m = vix_adj["sentiment_mult"]
         base = f.get("baseMonthlyDca", 100)
-        score = base * pm * nm * cyc_m
+        score = base * pm * nm * cyc_m * vix_m
         total_score += score
 
         processed.append({
@@ -82,6 +86,8 @@ def analyze_portfolio(funds: list, indices: list, monthly_budget: float = 500) -
             "peMultiplier": pm, "navMultiplier": round(nm, 2),
             "cycleMultiplier": cyc_m,
             "cyclePhase": f"{cyc_adj['merrill']}/{cyc_adj['kitchin']}/{cyc_adj['juglar']}",
+            "vixMultiplier": vix_m,
+            "vixPhase": vix_adj["sentiment_text"],
             "baseDca": round(base),
             "combinedScore": score, "strategyAction": action, "actionBadgeClass": badge,
             "plannedDcaAmount": 0
